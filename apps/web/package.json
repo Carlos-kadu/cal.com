@@ -149,6 +149,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.19.6",
+    "@babel/plugin-transform-runtime": "^7.25.9",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
     "@calcom/config": "*",
     "@calcom/types": "*",
     "@microsoft/microsoft-graph-types-beta": "0.15.0-preview",
@@ -177,6 +180,7 @@
     "@types/stripe": "^8.0.417",
     "@types/uuid": "8.3.1",
     "autoprefixer": "^10.4.12",
+    "babel-jest": "^29.7.0",
     "copy-webpack-plugin": "^11.0.0",
     "cron": "^3.1.7",
     "deasync": "^0.1.30",
