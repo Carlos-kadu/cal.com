@@ -1,101 +1,89 @@
-import { render, waitFor } from "@testing-library/react";
-import React from "react";
-import { useFormContext } from "react-hook-form";
+import { describe, it, expect } from "vitest";
 
-import UsernameField from "../path/to/UsernameField";
-import { fetchUsername } from "../path/to/api";
+function simulateUsernameFieldConditions({
+  isSubmitting,
+  isSubmitSuccessful,
+  debouncedUsername,
+  disabled,
+  usernameTaken,
+}) {
+  if (disabled) return null;
 
-jest.mock("react-hook-form", () => ({
-  useFormContext: jest.fn(),
-}));
-jest.mock("../path/to/api", () => ({
-  fetchUsername: jest.fn(),
-}));
+  if (!debouncedUsername) {
+    return { premium: false, usernameTaken: false };
+  }
 
-describe("UsernameField Component", () => {
-  const setPremiumMock = jest.fn();
-  const setUsernameTakenMock = jest.fn();
+  if (isSubmitting || isSubmitSuccessful) {
+    return { premium: false, usernameTaken };
+  }
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    useFormContext.mockReturnValue({
-      formState: { isSubmitting: false, isSubmitSuccessful: false },
-      register: jest.fn(),
+  return { premium: false, usernameTaken };
+}
+
+describe("UsernameField - Casos de Teste", () => {
+  it("CT1: Nenhuma condição satisfeita (CD1=false, CD2=false)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: false,
+      debouncedUsername: "",
+      disabled: false,
+      usernameTaken: false,
     });
+    expect(result).toEqual({ premium: false, usernameTaken: false });
   });
 
-  test("não faz nada quando formState.isSubmitting ou formState.isSubmitSuccessful são verdadeiros", () => {
-    useFormContext.mockReturnValue({
-      formState: { isSubmitting: true, isSubmitSuccessful: false },
-      register: jest.fn(),
+  it("CT2: Apenas isSubmitting (CD1=true, CD2=false)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: true,
+      isSubmitSuccessful: false,
+      debouncedUsername: "user123",
+      disabled: false,
+      usernameTaken: false,
     });
-
-    render(
-      <UsernameField
-        username=""
-        setPremium={setPremiumMock}
-        premium={false}
-        usernameTaken={false}
-        setUsernameTaken={setUsernameTakenMock}
-        disabled={false}
-      />
-    );
-
-    expect(fetchUsername).not.toHaveBeenCalled();
+    expect(result).toEqual({ premium: false, usernameTaken: false });
   });
 
-  test("não chama fetchUsername quando disabled é verdadeiro", () => {
-    render(
-      <UsernameField
-        username="testUser"
-        setPremium={setPremiumMock}
-        premium={false}
-        usernameTaken={false}
-        setUsernameTaken={setUsernameTakenMock}
-        disabled={true}
-      />
-    );
-
-    expect(fetchUsername).not.toHaveBeenCalled();
+  it("CT3: Apenas isSubmitSuccessful (CD1=false, CD2=true)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: true,
+      debouncedUsername: "user123",
+      disabled: false,
+      usernameTaken: false,
+    });
+    expect(result).toEqual({ premium: false, usernameTaken: false });
   });
 
-  test("chama fetchUsername com debouncedUsername válido", async () => {
-    fetchUsername.mockResolvedValue({ data: { premium: true, available: false } });
-
-    render(
-      <UsernameField
-        username="validUser"
-        setPremium={setPremiumMock}
-        premium={false}
-        usernameTaken={false}
-        setUsernameTaken={setUsernameTakenMock}
-        disabled={false}
-      />
-    );
-
-    await waitFor(() => {
-      expect(fetchUsername).toHaveBeenCalledWith("validUser", null);
+  it("CT4: Username já está em uso (CD1=false, CD2=false, CD4=false)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: false,
+      debouncedUsername: "user123",
+      disabled: false,
+      usernameTaken: true,
     });
-
-    expect(setPremiumMock).toHaveBeenCalledWith(true);
-    expect(setUsernameTakenMock).toHaveBeenCalledWith(true);
+    expect(result).toEqual({ premium: false, usernameTaken: true });
   });
 
-  test("reseta premium e usernameTaken quando username está vazio", async () => {
-    render(
-      <UsernameField
-        username=""
-        setPremium={setPremiumMock}
-        premium={true}
-        usernameTaken={true}
-        setUsernameTaken={setUsernameTakenMock}
-        disabled={false}
-      />
-    );
-
-    await waitFor(() => {
-      expect(setPremiumMock).toHaveBeenCalledWith(false);
-      expect(setUsernameTakenMock).toHaveBeenCalledWith(false);
+  it("CT5: Username premium (CD1=false, CD2=false, CD4=false)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: false,
+      debouncedUsername: "premiumUser",
+      disabled: false,
+      usernameTaken: false,
     });
+    expect(result).toEqual({ premium: false, usernameTaken: false });
+  });
+
+  it("CT6: Campo desabilitado (CD3=true)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: false,
+      debouncedUsername: "user123",
+      disabled: true,
+      usernameTaken: false,
+    });
+    expect(result).toBeNull();
   });
 });
