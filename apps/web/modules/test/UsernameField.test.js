@@ -1,23 +1,15 @@
 import { describe, it, expect } from "vitest";
 
-function simulateUsernameFieldConditions({
-  isSubmitting,
-  isSubmitSuccessful,
-  debouncedUsername,
-  disabled,
-  usernameTaken,
-}) {
-  if (disabled) return null;
+function simulateUsernameFieldConditions({ isSubmitting, isSubmitSuccessful, debouncedUsername, disabled }) {
+  if (disabled) return true;
 
-  if (!debouncedUsername) {
-    return { premium: false, usernameTaken: false };
-  }
+  if (!debouncedUsername) return true;
 
   if (isSubmitting || isSubmitSuccessful) {
-    return { premium: false, usernameTaken };
+    return true;
   }
 
-  return { premium: false, usernameTaken };
+  return false;
 }
 
 describe("UsernameField - Casos de Teste", () => {
@@ -25,11 +17,10 @@ describe("UsernameField - Casos de Teste", () => {
     const result = simulateUsernameFieldConditions({
       isSubmitting: false,
       isSubmitSuccessful: false,
-      debouncedUsername: "",
+      debouncedUsername: "user123",
       disabled: false,
-      usernameTaken: false,
     });
-    expect(result).toEqual({ premium: false, usernameTaken: false });
+    expect(result).toBe(false);
   });
 
   it("CT2: Apenas isSubmitting (CD1=true, CD2=false)", () => {
@@ -38,9 +29,8 @@ describe("UsernameField - Casos de Teste", () => {
       isSubmitSuccessful: false,
       debouncedUsername: "user123",
       disabled: false,
-      usernameTaken: false,
     });
-    expect(result).toEqual({ premium: false, usernameTaken: false });
+    expect(result).toBe(true);
   });
 
   it("CT3: Apenas isSubmitSuccessful (CD1=false, CD2=true)", () => {
@@ -49,41 +39,27 @@ describe("UsernameField - Casos de Teste", () => {
       isSubmitSuccessful: true,
       debouncedUsername: "user123",
       disabled: false,
-      usernameTaken: false,
     });
-    expect(result).toEqual({ premium: false, usernameTaken: false });
+    expect(result).toBe(true);
   });
 
-  it("CT4: Username já está em uso (CD1=false, CD2=false, CD4=false)", () => {
-    const result = simulateUsernameFieldConditions({
-      isSubmitting: false,
-      isSubmitSuccessful: false,
-      debouncedUsername: "user123",
-      disabled: false,
-      usernameTaken: true,
-    });
-    expect(result).toEqual({ premium: false, usernameTaken: true });
-  });
-
-  it("CT5: Username premium (CD1=false, CD2=false, CD4=false)", () => {
-    const result = simulateUsernameFieldConditions({
-      isSubmitting: false,
-      isSubmitSuccessful: false,
-      debouncedUsername: "premiumUser",
-      disabled: false,
-      usernameTaken: false,
-    });
-    expect(result).toEqual({ premium: false, usernameTaken: false });
-  });
-
-  it("CT6: Campo desabilitado (CD3=true)", () => {
+  it("CT4: Campo desabilitado (CD1=false, CD2=false, CD3=true, CD4=“valor”)", () => {
     const result = simulateUsernameFieldConditions({
       isSubmitting: false,
       isSubmitSuccessful: false,
       debouncedUsername: "user123",
       disabled: true,
-      usernameTaken: false,
     });
-    expect(result).toBeNull();
+    expect(result).toBe(true);
+  });
+
+  it("CT5: Username vazio ou nulo (CD1=false, CD2=false, CD3=false, CD4=“”)", () => {
+    const result = simulateUsernameFieldConditions({
+      isSubmitting: false,
+      isSubmitSuccessful: false,
+      debouncedUsername: "",
+      disabled: false,
+    });
+    expect(result).toBe(true);
   });
 });
