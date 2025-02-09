@@ -19,29 +19,27 @@ export default class LimitManager {
   /**
    * Checks if already marked busy by ancestors or siblings
    */
-  isAlreadyBusy(start: Dayjs, unit: IntervalLimitUnit) {
+  isAlreadyBusy(start: Dayjs, unit: IntervalLimitUnit): boolean {
     if (this.busyMap.has(LimitManager.createKey(start, "year"))) return true;
-
-    if (unit === "month" && this.busyMap.has(LimitManager.createKey(start, "month"))) {
+    if (["month", "week", "day"].includes(unit) && this.busyMap.has(LimitManager.createKey(start, "month")))
       return true;
-    } else if (
+    if (
       unit === "week" &&
-      // weeks can be part of two months
-      ((this.busyMap.has(LimitManager.createKey(start, "month")) &&
-        this.busyMap.has(LimitManager.createKey(start.endOf("week"), "month"))) ||
+      (this.busyMap.has(LimitManager.createKey(start, "week")) ||
+        this.busyMap.has(LimitManager.createKey(start.endOf("week"), "month")))
+    ) {
+      return true;
+    }
+
+    if (
+      unit === "day" &&
+      (this.busyMap.has(LimitManager.createKey(start, "day")) ||
         this.busyMap.has(LimitManager.createKey(start, "week")))
     ) {
       return true;
-    } else if (
-      unit === "day" &&
-      (this.busyMap.has(LimitManager.createKey(start, "month")) ||
-        this.busyMap.has(LimitManager.createKey(start, "week")) ||
-        this.busyMap.has(LimitManager.createKey(start, "day")))
-    ) {
-      return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   /**
